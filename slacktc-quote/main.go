@@ -14,8 +14,15 @@ import (
 const debug = false
 
 type Message struct {
-	Response_type string `json:"response_type"`
-	Text          string `json:"text"`
+	Response_type string     `json:"response_type"`
+	Text          string     `json:"text"`
+	Attachments   []AContent `json:"attachments"`
+}
+
+type AContent struct {
+	Color string `json:"color"`
+	Title string `json:"title"`
+	Text  string `json:"text"`
 }
 
 func main() {
@@ -122,7 +129,19 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			name, symbol, last, change, change_pct, day_low, day_high, year_range, mcap, vol, bid, ask, open, date)
 	}
 
-	message := Message{"in_channel", output}
+	//	message := Message{"in_channel", output, []{Text: "foo"}}
+	message := Message{
+		Response_type: "in_channel",
+		Text:          output,
+		Attachments: []AContent{
+			{
+				Color: "good",
+				Title: "Quote",
+				Text:  output,
+			},
+		},
+	}
+
 	js, err := json.Marshal(message)
 
 	if err != nil {
