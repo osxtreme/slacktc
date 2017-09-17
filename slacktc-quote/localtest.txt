@@ -11,6 +11,6 @@ curl -i -d "text=aapl,amzn&token=`cat channeltoken`" http://localhost:3000
 
 
 test against deploy url:
-curl -i -d "text=aapl,amzn&token=`cat channeltoken`" https://xnodad7y35.execute-api.us-west-2.amazonaws.com/development/
+curl -i -d "text=aapl,amzn&token=`cat channeltoken`" `up url`
 
 
