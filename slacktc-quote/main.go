@@ -100,7 +100,12 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: clean up date
 
-	output := ""
+	message := Message{
+		Response_type: "in_channel",
+		Text:          "Yahoo Finance says:",
+		Attachments:   []AContent{},
+	}
+
 	for _, data := range alldata {
 
 		// sn
@@ -108,9 +113,9 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		name := data[1]
 
 		// baopl1d1
-		bid, _ := strconv.ParseFloat(data[2], 64)
-		ask, _ := strconv.ParseFloat(data[3], 64)
-		open, _ := strconv.ParseFloat(data[4], 64)
+		//		bid, _ := strconv.ParseFloat(data[2], 64)
+		//		ask, _ := strconv.ParseFloat(data[3], 64)
+		//		open, _ := strconv.ParseFloat(data[4], 64)
 		prevClose, _ := strconv.ParseFloat(data[5], 64)
 		last, _ := strconv.ParseFloat(data[6], 64)
 		date := data[7]
@@ -125,21 +130,22 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		change := last - prevClose
 		change_pct := change / prevClose * 100
 
-		output += fmt.Sprintf("Quote: %s (%s) - Last: %.2f %+.2f (%+.2f%%), Day range: %.2f-%.2f 52-week range: %s. MktCap: %s. Vol: %s, Bid/Ask: %.2f/%.2f, Open: %.2f, Date: %s\n",
-			name, symbol, last, change, change_pct, day_low, day_high, year_range, mcap, vol, bid, ask, open, date)
-	}
+		output := fmt.Sprintf("Day range: %.2f - %.2f,\t52-week range: %s\nMktCap: %s, Vol: %s, Date: %s\n",
+			day_low, day_high, year_range, mcap, vol, date)
 
-	//	message := Message{"in_channel", output, []{Text: "foo"}}
-	message := Message{
-		Response_type: "in_channel",
-		Text:          output,
-		Attachments: []AContent{
-			{
-				Color: "good",
-				Title: "Quote",
-				Text:  output,
-			},
-		},
+		color := "good"
+		if change < 0 {
+			color = "danger"
+		}
+
+		my_attach_content := AContent{
+			Title: fmt.Sprintf("%s (%s) - Last: %.2f %+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
+			Color: color,
+			Text:  output,
+		}
+
+		message.Attachments = append(message.Attachments, my_attach_content)
+
 	}
 
 	js, err := json.Marshal(message)
