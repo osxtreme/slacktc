@@ -1,0 +1,6 @@
+PORT=3000 go run main.go
+
+curl -i -d "token=x&text=%3Chttps://apex.sh%3E" http://localhost:3000
+curl -i -d "token=x&text=%3Chttp://ipv6.test-ipv6.com/ip/%3E" http://localhost:3000
+curl -i -d "channel_id=C719BGCQ2&channel_name=bots&command=%2Fquote&response_url=https%3A%2F%2Fhooks.slack.com%2Fcommands%2FT71JM3RPG%2F241846065010%2FE5VpwZ5pYs7kyRlRySmB6JOB&team_domain=poundtc&team_id=T71JM3RPG&text=%3Chttp%3A%2F%2Fipv6.test-ipv6.com%2Fip%2F%3E&token=x&trigger_id=241985546773.239633127798.f77ed8c18ccd58b44495166b2b59169f&user_id=U71QJLQNT&user_name=ekim" http://localhost:3000
+
