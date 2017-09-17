@@ -20,9 +20,16 @@ type Message struct {
 }
 
 type AContent struct {
-	Color string `json:"color"`
+	Color  string     `json:"color"`
+	Title  string     `json:"title"`
+	Text   string     `json:"text,omitempty"`
+	Fields []FContent `json:"fields,omitempty"`
+}
+
+type FContent struct {
 	Title string `json:"title"`
-	Text  string `json:"text"`
+	Value string `json:"value"`
+	Short string `json:"short,omitempty"`
 }
 
 func main() {
@@ -31,10 +38,27 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
+func make_short_field(title string, value string) FContent {
+	return FContent{
+		Title: title,
+		Value: value,
+		Short: "true",
+	}
+}
+
 func handle(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Error parsing form.", http.StatusBadRequest)
 		return
+	}
+
+	return_style := "in_channel"
+
+	command := r.Form.Get("command")
+	// If command is blank or whatever just use default, which should be /quote, make it public
+	// If command is /pquote then make it private
+	if command == "/pquote" {
+		return_style = "ephemeral"
 	}
 
 	token := r.Form.Get("token")
@@ -68,13 +92,27 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	if arg_text == "help" {
 		fmt.Fprintf(w, "Usage: /quote symbol1<,symbol2,...> <field1,field2,...>\n")
-		fmt.Fprintf(w, "Fields can be: name,cap\n")
+		fmt.Fprintf(w, "Format options can be: fields\n")
 		return
 	}
 
 	args := strings.Split(arg_text, " ")
+	if len(args) < 1 {
+		fmt.Fprintf(w, "No arguments given, try help\n")
+		return
+	}
 	symbols := args[0]
-	//format := args[1]
+	var formats string
+	if len(args) > 1 {
+		formats = args[1]
+	}
+
+	use_fields := false
+	for _, option := range strings.Split(formats, ",") {
+		if option == "fields" {
+			use_fields = true
+		}
+	}
 
 	// Ideas and examples from https://github.com/doneland/yquotes
 
@@ -101,7 +139,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	// TODO: clean up date
 
 	message := Message{
-		Response_type: "in_channel",
+		Response_type: return_style,
 		Text:          "Yahoo Finance says:",
 		Attachments:   []AContent{},
 	}
@@ -130,8 +168,19 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		change := last - prevClose
 		change_pct := change / prevClose * 100
 
-		output := fmt.Sprintf("Day: %.2f - %.2f,\t52-week: %s\nMktCap: %s, Vol: %s, Date: %s\n",
-			day_low, day_high, year_range, mcap, vol, date)
+		var output string
+		var field_array []FContent
+
+		if use_fields {
+			field_array = append(field_array, make_short_field("Day", fmt.Sprintf("%.2f - %.2f", day_low, day_high)))
+			field_array = append(field_array, make_short_field("52-week", year_range))
+			field_array = append(field_array, make_short_field("MktCap", mcap))
+			field_array = append(field_array, make_short_field("Vol", vol))
+			field_array = append(field_array, make_short_field("Date", date))
+		} else {
+			output = fmt.Sprintf("Day: %.2f - %.2f,\t52-week: %s\nMktCap: %s, Vol: %s, Date: %s\n",
+				day_low, day_high, year_range, mcap, vol, date)
+		}
 
 		color := "good"
 		if change < 0 {
@@ -139,9 +188,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		my_attach_content := AContent{
-			Title: fmt.Sprintf("%s (%s) %.2f\t%+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
-			Color: color,
-			Text:  output,
+			Title:  fmt.Sprintf("%s (%s) %.2f\t%+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
+			Color:  color,
+			Text:   output,
+			Fields: field_array,
 		}
 
 		message.Attachments = append(message.Attachments, my_attach_content)
