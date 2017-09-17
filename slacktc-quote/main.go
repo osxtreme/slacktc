@@ -130,7 +130,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		change := last - prevClose
 		change_pct := change / prevClose * 100
 
-		output := fmt.Sprintf("Day range: %.2f - %.2f,\t52-week range: %s\nMktCap: %s, Vol: %s, Date: %s\n",
+		output := fmt.Sprintf("Day: %.2f - %.2f,\t52-week: %s\nMktCap: %s, Vol: %s, Date: %s\n",
 			day_low, day_high, year_range, mcap, vol, date)
 
 		color := "good"
@@ -139,7 +139,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		my_attach_content := AContent{
-			Title: fmt.Sprintf("%s (%s) - Last: %.2f %+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
+			Title: fmt.Sprintf("%s (%s) %.2f\t%+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
 			Color: color,
 			Text:  output,
 		}
