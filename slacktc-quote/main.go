@@ -101,7 +101,15 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "No arguments given, try help\n")
 		return
 	}
-	symbols := args[0]
+
+	symbollist := args[0]
+	var newsymlist []string
+	for _, sym := range strings.Split(symbollist, ",") {
+		newsymlist = append(newsymlist, sym+".us")
+	}
+	symbols := strings.Join(newsymlist, "+")
+
+	//	symbols := args[0]
 	var formats string
 	if len(args) > 1 {
 		formats = args[1]
@@ -116,8 +124,11 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	// Ideas and examples from https://github.com/doneland/yquotes
 
-	base_url := "http://download.finance.yahoo.com/d/quotes.csv"
-	default_format := "snbaopl1d1ghwj1v"
+	//	base_url := "http://download.finance.yahoo.com/d/quotes.csv"
+	//	default_format := "snbaopl1d1ghwj1v"
+
+	base_url := "https://stooq.com/q/l/"
+	default_format := "snd2t2ohlcpv"
 
 	my_url := base_url + "?s=" + symbols + "&f=" + default_format
 	resp, err := http.Get(my_url)
@@ -140,30 +151,33 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	message := Message{
 		Response_type: return_style,
-		Text:          "Yahoo Finance says:",
+		Text:          "Stooq says:",
 		Attachments:   []AContent{},
 	}
 
 	for _, data := range alldata {
 
-		// sn
+		// snd2t2ohlcpv
+		// AAPL.US,APPLE,2018-03-21,21:00:09,175.04,175.09,171.26,171.27,-2.27%,37054935,5490061643
 		symbol := data[0]
 		name := data[1]
+		date := data[2]
+		//time := data[3]
+		//open data 4
+		day_high, _ := strconv.ParseFloat(data[5], 64)
+		day_low, _ := strconv.ParseFloat(data[6], 64)
+		last, _ := strconv.ParseFloat(data[7], 64)
+		prevClose, _ := strconv.ParseFloat(data[8], 64)
+		vol := data[9]
 
 		// baopl1d1
 		//		bid, _ := strconv.ParseFloat(data[2], 64)
 		//		ask, _ := strconv.ParseFloat(data[3], 64)
 		//		open, _ := strconv.ParseFloat(data[4], 64)
-		prevClose, _ := strconv.ParseFloat(data[5], 64)
-		last, _ := strconv.ParseFloat(data[6], 64)
-		date := data[7]
 
 		// ghwj1v
-		day_low, _ := strconv.ParseFloat(data[8], 64)
-		day_high, _ := strconv.ParseFloat(data[9], 64)
-		year_range := data[10]
-		mcap := data[11]
-		vol := data[12]
+		//		year_range := data[10]
+		//		mcap := data[11]
 
 		change := last - prevClose
 		change_pct := change / prevClose * 100
@@ -173,13 +187,13 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 		if use_fields {
 			field_array = append(field_array, make_short_field("Day", fmt.Sprintf("%.2f - %.2f", day_low, day_high)))
-			field_array = append(field_array, make_short_field("52-week", year_range))
-			field_array = append(field_array, make_short_field("MktCap", mcap))
+			//			field_array = append(field_array, make_short_field("52-week", year_range))
+			//			field_array = append(field_array, make_short_field("MktCap", mcap))
 			field_array = append(field_array, make_short_field("Vol", vol))
 			field_array = append(field_array, make_short_field("Date", date))
 		} else {
-			output = fmt.Sprintf("Day: %.2f - %.2f,\t52-week: %s\nMktCap: %s, Vol: %s, Date: %s\n",
-				day_low, day_high, year_range, mcap, vol, date)
+			output = fmt.Sprintf("Day: %.2f - %.2f\nVol: %s, Date: %s\n",
+				day_low, day_high, vol, date)
 		}
 
 		color := "good"
