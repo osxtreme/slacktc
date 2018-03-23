@@ -197,10 +197,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		color := "good"
-		emoji := ":arrow_up:"
+		emoji := ":chart:"
 		if change < 0 {
 			color = "danger"
-			emoji = ":arrow_down:"
+			emoji = ":small_red_triangle_down:"
 		}
 
 		my_attach_content := AContent{
