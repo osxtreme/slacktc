@@ -197,12 +197,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 
 		color := "good"
+		emoji := ":arrow_up:"
 		if change < 0 {
 			color = "danger"
+			emoji = ":arrow_down:"
 		}
 
 		my_attach_content := AContent{
-			Title:  fmt.Sprintf("%s (%s) %.2f\t%+.2f (%+.2f%%)", name, symbol, last, change, change_pct),
+			Title:  fmt.Sprintf("%s (%s) %.2f\t%s %+.2f (%+.2f%%)", name, symbol, last, emoji, change, change_pct),
 			Color:  color,
 			Text:   output,
 			Fields: field_array,
