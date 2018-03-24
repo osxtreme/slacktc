@@ -105,7 +105,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	symbollist := args[0]
 	var newsymlist []string
 	for _, sym := range strings.Split(symbollist, ",") {
-		newsymlist = append(newsymlist, sym+".us")
+		if !strings.ContainsAny(sym, ".") {
+			sym = sym + ".US"
+		}
+		newsymlist = append(newsymlist, sym)
 	}
 	symbols := strings.Join(newsymlist, "+")
 
@@ -146,8 +149,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	// TODO: clean up date
 
 	message := Message{
 		Response_type: return_style,
